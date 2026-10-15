@@ -1024,11 +1024,17 @@ var lava = (function(){
     '#else',
     'precision mediump float;',
     '#endif',
-    'uniform vec3 uRes;uniform vec4 uB[14];uniform vec4 uD[7];uniform vec4 uP;uniform vec4 uM;',
+    'uniform vec3 uRes;uniform vec4 uB[14];uniform vec4 uD[7];uniform vec4 uP;uniform vec4 uV;uniform vec4 uM;',
     'float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
     'void main(){',
-    ' vec2 p=(gl_FragCoord.xy-0.5*uRes.xy)/uRes.y;',
+    ' vec2 p0=(gl_FragCoord.xy-0.5*uRes.xy)/uRes.y;',
+    ' vec2 p=p0;',
     ' float px=uRes.z;',
+    /* cursor: a gosma cede em volta dele e é arrastada junto com o movimento */
+    ' if(uP.z>0.0){',
+    '  vec2 d=p0-uP.xy;float w=uP.z*exp(-dot(d,d)/(uP.w*uP.w));',
+    '  p-=d*w*0.35+uV.xy*w;',
+    ' }',
     ' float f=0.0;float th=0.0;float gs=0.0;vec2 g=vec2(0.0);',
     ' for(int i=0;i<14;i++){',
     '  vec4 b=uB[i];',
@@ -1041,17 +1047,13 @@ var lava = (function(){
     '  float q=(dd-dot(d,Dd))/r2;',
     '  if(q<1.0){float s=1.0-q;float k=s*s*s;f+=k;th+=k*b.w;g+=(-6.0*s*s/r2)*(d-Dd);}',
     ' }',
-    ' if(uP.z>0.0){',
-    '  vec2 d=p-uP.xy;float r2=uP.w*uP.w;float q=dot(d,d)/r2;',
-    '  if(q<1.0){float s=1.0-q;float a=0.6*uP.z;f-=a*s*s*s;g-=a*(-6.0*s*s/r2)*d;}',
-    ' }',
     ' float gm=length(g);',
     ' float sd=(f-0.3)/max(gm,0.0001);',
     ' float alpha=clamp(sd/(px*1.3)+0.5,0.0,1.0);',
-    ' float x=clamp(sd/0.07,0.0,1.0);float ix=1.0-x;',
+    ' float x=clamp(sd/0.09,0.0,1.0);float ix=1.0-x;',
     ' float slope=min(ix/sqrt(max(1.0-ix*ix,0.03)),4.0);',
     ' vec2 gh=g/max(gm,0.0001);',
-    ' vec3 n=normalize(vec3(-gh*slope-g*0.005,1.0));',
+    ' vec3 n=normalize(vec3(-gh*slope-g*0.012,1.0));',
     ' float thick=clamp((f-0.3)/0.9,0.0,1.0);',
     ' float temp=clamp(th/max(f,0.001),0.0,1.0);',
     ' vec3 L=normalize(vec3(-0.5,0.65,0.58));',
@@ -1061,36 +1063,21 @@ var lava = (function(){
     ' float rimL=pow(clamp(dot(n,normalize(vec3(0.55,-0.7,0.35))),0.0,1.0),3.0);',
     ' float fres=pow(1.0-n.z,2.2);',
     ' float glow=smoothstep(0.02,1.3,gs);',
-    /* fundo escuro: cera laranja */
+    /* fundo escuro: gosma neon laranja, com contorno aceso e volume */
     ' vec3 bgD=vec3(0.051,0.047,0.043);',
-    ' vec3 wax=mix(vec3(0.55,0.15,0.045),vec3(0.84,0.33,0.10),smoothstep(0.0,0.3,thick));',
-    ' wax=mix(wax,vec3(0.95,0.54,0.25),smoothstep(0.25,1.0,thick)*0.75);',
-    ' wax=mix(wax,vec3(0.97,0.70,0.34),temp*0.22*smoothstep(0.1,0.8,thick));',
-    ' vec3 cD=wax*(0.55+0.55*diff);',
-    ' cD=mix(cD,vec3(0.36,0.08,0.025),fres*0.4);',
-    ' cD+=vec3(1.0,0.55,0.25)*rimL*0.22;',
-    ' cD+=vec3(0.95,0.55,0.25)*pow(thick,1.6)*0.1;',
-    ' cD+=vec3(1.0,0.92,0.82)*spec;',
-    ' vec3 outD=bgD+vec3(0.85,0.28,0.06)*glow*0.5*uM.x;',
+    ' float core=smoothstep(0.45,1.0,thick);',
+    ' float rim=ix*ix*ix;',
+    ' vec3 cD=mix(vec3(1.0,0.30,0.05),vec3(0.80,0.26,0.045),smoothstep(0.0,0.3,thick));',
+    ' cD=mix(cD,vec3(1.0,0.66,0.36),core*0.4+temp*0.1*core);',
+    ' cD*=0.5+0.65*diff;',
+    ' cD=mix(cD,vec3(0.42,0.07,0.02),clamp(dot(n,normalize(vec3(0.5,-0.65,0.3))),0.0,1.0)*0.35*(1.0-rim));',
+    ' cD+=vec3(1.0,0.5,0.18)*rim*(0.35+0.3*(1.0-diff));',
+    ' cD+=vec3(1.0,0.9,0.8)*(pow(nh,110.0)*0.7+pow(nh,14.0)*0.07);',
+    ' float halo=pow(clamp(f/0.3,0.0,1.0),2.5)*(1.0-alpha);',
+    ' float g1=smoothstep(0.0,1.6,gs);float g2=smoothstep(0.35,1.5,gs);',
+    ' vec3 outD=bgD+vec3(0.9,0.26,0.035)*(pow(g1,1.4)*0.24+g2*0.1)*uM.x;',
+    ' outD+=vec3(1.0,0.36,0.07)*halo*0.45*uM.x;',
     ' outD=mix(outD,cD,alpha*uM.x);',
-    /* teste: neon emissivo, sem cara de objeto sólido. uM.w = 1 quente, 2 elétrica */
-    ' if(uM.w>0.5){',
-    '  float el=step(1.5,uM.w);',
-    '  float core=smoothstep(0.45,1.0,thick);',
-    '  float rim=ix*ix*ix;',
-    '  float halo=exp(min(sd,0.0)/mix(0.028,0.02,el))*(1.0-alpha);',
-    '  vec3 edgeC=mix(vec3(0.72,0.19,0.03),vec3(1.0,0.30,0.05),el);',
-    '  vec3 bodyC=mix(vec3(0.94,0.38,0.09),vec3(0.80,0.26,0.045),el);',
-    '  vec3 coreC=mix(vec3(1.0,0.58,0.28),vec3(1.0,0.66,0.36),el);',
-    '  vec3 nc=mix(edgeC,bodyC,smoothstep(0.0,0.3,thick));',
-    '  nc=mix(nc,coreC,core*mix(0.45,0.4,el)+temp*0.1*core);',
-    '  nc+=vec3(1.0,0.5,0.18)*rim*mix(0.18,0.55,el);',
-    '  nc+=vec3(1.0,0.85,0.7)*pow(nh,24.0)*0.06;',
-    '  float g1=smoothstep(0.0,1.6,gs);float g2=smoothstep(0.35,1.5,gs);',
-    '  outD=bgD+vec3(0.9,0.26,0.035)*(pow(g1,1.4)*mix(0.26,0.24,el)+g2*0.1*el)*uM.x;',
-    '  outD+=vec3(1.0,0.36,0.07)*halo*mix(0.22,0.45,el)*uM.x;',
-    '  outD=mix(outD,nc,alpha*uM.x);',
-    ' }',
     /* fundo claro: cera azul (a página inverte esta cor por cima) */
     ' vec3 bgL=vec3(0.957,0.945,0.925);',
     ' vec3 waxL=mix(vec3(0.07,0.19,0.52),vec3(0.18,0.43,0.90),smoothstep(0.0,0.3,thick));',
@@ -1122,14 +1109,14 @@ var lava = (function(){
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
   var aLoc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(aLoc); gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
   function loc(n){ return gl.getUniformLocation(prog, n); }
-  var uRes = loc('uRes'), uB = loc('uB'), uD = loc('uD'), uP = loc('uP'), uM = loc('uM');
+  var uRes = loc('uRes'), uB = loc('uB'), uD = loc('uD'), uP = loc('uP'), uV = loc('uV'), uM = loc('uM');
 
   var W = 0, H = 0, aspect = 1, balls = [];
   var dataB = new Float32Array(MAXB * 4), dataD = new Float32Array(MAXB * 2);
   var P = { x:0, y:0, vx:0, vy:0, a:0, on:false, touch:false, last:0 };
+  /* versão suavizada do cursor que o shader usa: segue com um pequeno atraso, como líquido viscoso */
+  var S = { x:0, y:0, vx:0, vy:0 };
   var time = 0, op = reduce ? 1 : 0, last = performance.now(), running = true;
-  /* teste de visual: ?lava=quente ou ?lava=eletrica no link */
-  var variant = ({ quente:1, eletrica:2 })[(location.search.match(/[?&]lava=(\w+)/) || [])[1]] || 0;
 
   function resize(){
     var cw = canvas.clientWidth || window.innerWidth, ch = canvas.clientHeight || window.innerHeight;
@@ -1202,15 +1189,15 @@ var lava = (function(){
     if (P.a > 0.01){
       for (i = 0; i < balls.length; i++){
         b = balls[i];
-        var ex = b.x - P.x, ey = b.y - P.y, dd = Math.sqrt(ex * ex + ey * ey) + 1e-6, range = b.R * 0.85 + 0.07;
+        var ex = b.x - P.x, ey = b.y - P.y, dd = Math.sqrt(ex * ex + ey * ey) + 1e-6, range = b.R + 0.1;
         if (dd < range){
-          var s = 1 - dd / range, push = (P.touch ? 0.7 : 0.9) * s * s * P.a;
+          var s = 1 - dd / range, sm = s * s * (3 - 2 * s), push = (P.touch ? 0.6 : 0.5) * sm * s * P.a;
           b.ax += ex / dd * push / b.m; b.ay += ey / dd * push / b.m;
           if (!P.touch){
-            b.ax += P.vx * 1.4 * s * P.a / b.m; b.ay += P.vy * 1.4 * s * P.a / b.m;
-            var amt = s * Math.min(sp, 3) * 6 * dt, p2 = 2 * Math.atan2(P.vy, P.vx);
+            b.ax += P.vx * 1.6 * sm * P.a / b.m; b.ay += P.vy * 1.6 * sm * P.a / b.m;
+            var amt = sm * Math.min(sp, 3) * 4 * dt, p2 = 2 * Math.atan2(P.vy, P.vx);
             b.dav += amt * Math.cos(p2); b.dbv += amt * Math.sin(p2);
-            if (sp > 0.35 && dd < b.R * 0.5 && b.R > 0.12 && b.cool <= 0 && balls.length < MAXB){
+            if (sp > 0.6 && dd < b.R * 0.5 && b.R > 0.12 && b.cool <= 0 && balls.length < MAXB){
               var cc = split(b, -P.vy / sp, P.vx / sp, false);
               b.vx += P.vx * 0.12; b.vy += P.vy * 0.12; cc.vx += P.vx * 0.12; cc.vy += P.vy * 0.12;
             }
@@ -1225,8 +1212,8 @@ var lava = (function(){
       b.x += b.vx * dt; b.y += b.vy * dt;
       if (b.cool > 0) b.cool -= dt;
       var vm = Math.sqrt(b.vx * b.vx + b.vy * b.vy), mt = Math.min(0.3, vm * 4), t2 = 2 * Math.atan2(b.vy, b.vx);
-      b.dav += (-(b.da - mt * Math.cos(t2)) * 26 - b.dav * 3.2) * dt;
-      b.dbv += (-(b.db - mt * Math.sin(t2)) * 26 - b.dbv * 3.2) * dt;
+      b.dav += (-(b.da - mt * Math.cos(t2)) * 26 - b.dav * 2.4) * dt;
+      b.dbv += (-(b.db - mt * Math.sin(t2)) * 26 - b.dbv * 2.4) * dt;
       b.da += b.dav * dt; b.db += b.dbv * dt;
       var dm = Math.sqrt(b.da * b.da + b.db * b.db);
       if (dm > 0.42){ b.da *= 0.42 / dm; b.db *= 0.42 / dm; }
@@ -1258,8 +1245,11 @@ var lava = (function(){
     gl.uniform3f(uRes, canvas.width, canvas.height, 1 / canvas.height);
     gl.uniform4fv(uB, dataB);
     gl.uniform4fv(uD, dataD);
-    gl.uniform4f(uP, P.x, P.y, reduce ? 0 : P.a, 0.09);
-    gl.uniform4f(uM, op, top, bottom, variant);
+    var shx = S.vx * 0.03, shy = S.vy * 0.03, shm = Math.sqrt(shx * shx + shy * shy);
+    if (shm > 0.07){ shx *= 0.07 / shm; shy *= 0.07 / shm; }
+    gl.uniform4f(uP, S.x, S.y, reduce ? 0 : P.a, 0.14);
+    gl.uniform4f(uV, shx, shy, 0, 0);
+    gl.uniform4f(uM, op, top, bottom, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
   function frame(ts){
@@ -1268,6 +1258,9 @@ var lava = (function(){
     if (!(dt > 0)) dt = 0.016; if (dt > 0.05) dt = 0.05;
     op += (1 - op) * (1 - Math.exp(-dt * 2.2));
     step(dt / 2); step(dt / 2);
+    var kf = 1 - Math.exp(-dt * 12), kv = 1 - Math.exp(-dt * 5);
+    S.x += (P.x - S.x) * kf; S.y += (P.y - S.y) * kf;
+    S.vx += (P.vx - S.vx) * kv; S.vy += (P.vy - S.vy) * kv;
     render();
     requestAnimationFrame(frame);
   }
@@ -1282,6 +1275,7 @@ var lava = (function(){
       if (mag > 4){ ivx *= 4 / mag; ivy *= 4 / mag; }
       P.vx = P.vx * 0.6 + ivx * 0.4; P.vy = P.vy * 0.6 + ivy * 0.4;
     }
+    if (P.a < 0.01){ S.x = p.x; S.y = p.y; S.vx = 0; S.vy = 0; }
     P.x = p.x; P.y = p.y; P.last = now; P.on = true; P.touch = !!touch;
   };
   api.poke = function(cx, cy){
