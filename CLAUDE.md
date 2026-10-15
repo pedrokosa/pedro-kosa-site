@@ -8,7 +8,7 @@ Site pessoal de portfólio. Pedro é jornalista com MBA em marketing digital e t
 - `assets/logos/`: logos das marcas em branco (PNG com transparência).
 - `assets/favicon.svg`: favicon provisório.
 - `docs/`: contexto do projeto. Leia antes de mudanças grandes.
-  - `notas-de-versao.md`: histórico V1 a V9, copy definido pelo Pedro, restrições visuais e pendências. É o documento mais importante.
+  - `notas-de-versao.md`: histórico V1 a V10, copy definido pelo Pedro, restrições visuais e pendências. É o documento mais importante.
   - `referencias-visuais.md`: direção de arte e referências.
   - `experiencias.md`: rascunho do currículo, matéria-prima para cases e "Sobre mim".
   - `decisoes-iniciais.md`: por que site próprio, hospedagem, contato, analytics.

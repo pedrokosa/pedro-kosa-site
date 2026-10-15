@@ -10,7 +10,13 @@ O trabalho (título no corpo igual ao menu), oito serviços sem abas: Estratégi
 ## Restrições visuais pedidas
 Sem chapéus acima dos títulos, sem letras espaçadas, sem elementos de linha, sem ícones pequenos arredondados com bolinha e borda fina de acento, sem outros maneirismos de IA.
 
-## V9 (atual)
+## V10 (atual)
+Lava refeita como gosma neon, na versão "elétrica" escolhida pelo Pedro entre duas opções (quente e elétrica). Laranja com contorno aceso como tubo de neon, volume (luz de um lado, sombra avermelhada do outro), reflexo de líquido e halo em volta das gotas.
+Cursor: a gosma cede em volta dele e é arrastada na direção do movimento, com um leve atraso, como líquido viscoso. Saiu o "buraco" que o cursor abria e a aura laranja que aparecia em volta dele. Empurrão mais macio, balanço mais gelatinoso; a gota só parte em duas com movimento rápido.
+Legibilidade: a lava se apaga atrás dos blocos de texto (subtítulo do hero, abertura, títulos, serviços, Sobre mim, Contato, rodapé), com borda suave. O nome no hero fica de fora de propósito.
+Contato: a lava azul segue o mesmo estilo neon (azul oposto ao laranja). Fundo sem WebGL (CSS) atualizado para o mesmo visual.
+
+## V9
 Animações de rolagem, solução mista escolhida pelo Pedro:
 Cases no computador e no tablet (2 ou 4 colunas): o grid continua; quando cada fileira aparece, os cards entram como cartas distribuídas na mesa (sobem de baixo com leve inclinação, um depois do outro).
 Cases no celular (1 coluna): cards empilhados; cada card sobe e se encaixa por cima do anterior, que encolhe um pouco e escurece.
